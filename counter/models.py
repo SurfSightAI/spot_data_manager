@@ -140,6 +140,8 @@ class AverageDataPoint(models.Model):
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
     count = models.IntegerField(default=0)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    # id info saved based on local timezone
     hour_id = EnumIntegerField(HourIdentifierEnum, null=True)
     day_id = EnumIntegerField(DayIdentifierEnum, null=True)
     month_id = EnumIntegerField(MonthIdentifierEnum, null=True)
@@ -164,6 +166,7 @@ class DetectionDataPoint(models.Model):
 def create_average_datapoint_hour_id(sender, instance, created, **kwargs):
     """When a new AverageDataPoint is created, add its hour_id"""
     if created:
+        local_time = instance.timestamp.astimezone(pytz.timezone(instance.spot.timezone))
         instance.hour_id = HourIdentifierEnum(instance.timestamp.hour)
         instance.day_id = DayIdentifierEnum(instance.timestamp.weekday())
         instance.month_id = MonthIdentifierEnum(instance.timestamp.month)
