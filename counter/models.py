@@ -167,9 +167,9 @@ def create_average_datapoint_hour_id(sender, instance, created, **kwargs):
     """When a new AverageDataPoint is created, add its hour_id"""
     if created:
         local_time = instance.timestamp.astimezone(pytz.timezone(instance.spot.timezone))
-        instance.hour_id = HourIdentifierEnum(instance.timestamp.hour)
-        instance.day_id = DayIdentifierEnum(instance.timestamp.weekday())
-        instance.month_id = MonthIdentifierEnum(instance.timestamp.month)
+        instance.hour_id = HourIdentifierEnum(local_time.hour)
+        instance.day_id = DayIdentifierEnum(local_time.weekday())
+        instance.month_id = MonthIdentifierEnum(local_time.month)
         instance.save()
 
 
