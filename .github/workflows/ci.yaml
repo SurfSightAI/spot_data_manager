@@ -1,9 +1,9 @@
 name: CI
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   test:
@@ -47,7 +47,7 @@ jobs:
 
     - name: "Install test dependencies"
       run: |
-        pip install -r spot_data/requirements.txt
+        pip install -r requirements.txt
   
     - name: "Install PostgreSQL client"
       run: |

@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class DayIdentifierEnum(Enum):
     MONDAY = 0
     TUESDAY = 1
@@ -18,6 +19,7 @@ class DayIdentifierEnum(Enum):
         SATURDAY = "Saturday"
         SUNDAY = "Sunday"
 
+
 class MonthIdentifierEnum(Enum):
     JANUARY = 1
     FEBRUARY = 2
@@ -29,7 +31,7 @@ class MonthIdentifierEnum(Enum):
     AUGUST = 8
     SEPTEMBER = 9
     OCTOBER = 10
-    NOVEMBER = 11 
+    NOVEMBER = 11
     DECEMBER = 12
 
     class Labels:
@@ -46,34 +48,35 @@ class MonthIdentifierEnum(Enum):
         NOVEMBER = "November"
         DECEMBER = "December"
 
+
 class HourIdentifierEnum(Enum):
-    HR_00 = 0 
-    HR_01 = 1 
-    HR_02 = 2 
-    HR_03 = 3 
-    HR_04 = 4 
-    HR_05 = 5 
-    HR_06 = 6 
-    HR_07 = 7 
-    HR_08 = 8 
-    HR_09 = 9 
-    HR_10 = 10 
-    HR_11 = 11 
-    HR_12 = 12 
-    HR_14 = 14 
-    HR_13 = 13 
-    HR_15 = 15 
-    HR_16 = 16 
-    HR_17 = 17 
-    HR_18 = 18 
-    HR_19 = 19 
-    HR_20 = 20 
-    HR_21 = 21 
-    HR_22 = 22 
-    HR_23 = 23 
+    HR_00 = 0
+    HR_01 = 1
+    HR_02 = 2
+    HR_03 = 3
+    HR_04 = 4
+    HR_05 = 5
+    HR_06 = 6
+    HR_07 = 7
+    HR_08 = 8
+    HR_09 = 9
+    HR_10 = 10
+    HR_11 = 11
+    HR_12 = 12
+    HR_14 = 14
+    HR_13 = 13
+    HR_15 = 15
+    HR_16 = 16
+    HR_17 = 17
+    HR_18 = 18
+    HR_19 = 19
+    HR_20 = 20
+    HR_21 = 21
+    HR_22 = 22
+    HR_23 = 23
 
     class Labels:
-        HR_00 = "12AM" 
+        HR_00 = "12AM"
         HR_01 = "1AM"
         HR_02 = "2AM"
         HR_03 = "3AM"
