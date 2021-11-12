@@ -3,8 +3,8 @@ import django
 django.setup()
 
 import pytest
-from spot_data.counter.enums import HourIdentifierEnum, MonthIdentifierEnum
-from spot_data.counter.models import (
+from counter.enums import HourIdentifierEnum, MonthIdentifierEnum
+from counter.models import (
     AggregateDataPoint,
     AverageDataPoint,
     DetectionDataPoint,

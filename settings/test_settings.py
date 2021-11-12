@@ -13,7 +13,7 @@ DATABASES = {
         "PORT": os.environ["DATABASE_PORT"],
     }
 }
-INSTALLED_APPS = ("spot_data.counter",)
+INSTALLED_APPS = ("counter",)
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 

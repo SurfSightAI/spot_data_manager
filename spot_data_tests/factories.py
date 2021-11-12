@@ -1,7 +1,7 @@
 import random
 
 import pytest
-from spot_data.counter.models import DetectionDataPoint, Spot
+from counter.models import DetectionDataPoint, Spot
 
 spot_params = {
     "name": "Lowers",
