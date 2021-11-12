@@ -1,21 +1,20 @@
 import os
-from dotenv import load_dotenv
-from pathlib import Path
 
+from dotenv import load_dotenv
 
 USE_TZ = True
-TIMEZONE_ZONE = 'UTC'
+TIMEZONE_ZONE = "UTC"
 
-load_dotenv('.env')
+load_dotenv(".env")
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ["DATABASE_NAME"],
-        'USER': os.environ["DATABASE_USER"],
-        'PASSWORD': os.environ["DATABASE_PASSWORD"],
-        'HOST': os.environ["DATABASE_HOST"],
-        'PORT': os.environ["DATABASE_PORT"],
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ["DATABASE_NAME"],
+        "USER": os.environ["DATABASE_USER"],
+        "PASSWORD": os.environ["DATABASE_PASSWORD"],
+        "HOST": os.environ["DATABASE_HOST"],
+        "PORT": os.environ["DATABASE_PORT"],
     }
 }
 INSTALLED_APPS = [

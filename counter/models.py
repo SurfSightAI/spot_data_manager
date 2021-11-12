@@ -1,22 +1,24 @@
 import datetime
 import logging
+from statistics import mean
 
 import pytz
+import requests
+from django.db.models import Q, F, Func
 from astral import LocationInfo, sun
 from django.conf import settings
 from django.db import models
-from django.db.models import Q, Avg
+from django.db.models import Avg
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from enumfields import EnumIntegerField
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
-from statistics import mean
-import requests
-from .enums import HourIdentifierEnum, MonthIdentifierEnum, DayIdentifierEnum
-
+from django.db.models.fields import DateTimeField, TimeField
+from .enums import DayIdentifierEnum, HourIdentifierEnum, MonthIdentifierEnum
 
 LOGGER = logging.getLogger(__name__)
+
 
 
 class SpotManager(models.Manager):
@@ -25,15 +27,16 @@ class SpotManager(models.Manager):
         if cam_check:
             for spot in queryset:
                 spot.check_cam()
-        return (
-            queryset.filter(
-                Q(enabled=True) &
-                Q(sunrise__lt=datetime.datetime.now(pytz.utc)) &
-                Q(sunset__gt=datetime.datetime.now(pytz.utc))
-            )
-        )
 
-
+        return [
+            spot
+            for spot in queryset.filter(enabled=True)
+            if spot.sunrise
+            < datetime.datetime.now().astimezone(pytz.timezone(spot.timezone)).time()
+            < spot.sunset
+        ]
+        
+        
 class Spot(models.Model):
     name = models.CharField(blank=False, null=True, max_length=100)
     major_city = models.CharField(max_length=100)
@@ -42,10 +45,20 @@ class Spot(models.Model):
     lat = models.FloatField(blank=True, null=True)
     lng = models.FloatField(blank=True, null=True)
     timezone = models.CharField(blank=True, null=True, max_length=200)
+
+    # Cam Url
     url = models.CharField(blank=True, null=True, max_length=200)
-    sunrise = models.DateTimeField(blank=True, null=True)
-    sunset = models.DateTimeField(blank=True, null=True)
-    enabled = models.BooleanField(default=True)
+
+    # Private sunset/sunrise are utc aware datetime objects
+    _sunrise = models.DateTimeField(blank=True, null=True)
+    _sunset = models.DateTimeField(blank=True, null=True)
+
+    # Public sunrise/sunset are local times based on spot timezone
+    sunrise = models.TimeField(blank=True, null=True, db_index=True)
+    sunset = models.TimeField(blank=True, null=True, db_index=True)
+
+
+    enabled = models.BooleanField(default=True, db_index=True)
     current_count = models.IntegerField(blank=True, null=True)
 
     objects = SpotManager()
@@ -55,13 +68,15 @@ class Spot(models.Model):
 
     def current_time(self):
         return datetime.datetime.now(pytz.timezone(self.timezone))
-    
+
     def local_sunrise_time(self):
-        return self.sunrise.astimezone(pytz.timezone(self.timezone)).strftime("%H:%M:%S")
+        return self.sunrise.astimezone(pytz.timezone(self.timezone)).strftime(
+            "%H:%M:%S"
+        )
 
     def local_sunset_time(self):
         return self.sunset.astimezone(pytz.timezone(self.timezone)).strftime("%H:%M:%S")
-        
+
     def is_active(self):
         return self.sunrise < datetime.datetime.now(pytz.utc) < self.sunset
 
@@ -70,8 +85,10 @@ class Spot(models.Model):
             loc = LocationInfo(self.major_city, self.country, "UTC", self.lat, self.lng)
             data = sun.sun(loc.observer, datetime.datetime.now(pytz.utc))
 
-            self.sunrise = data.get("sunrise")
-            self.sunset = data.get("sunset")
+            self._sunrise = data.get("sunrise")
+            self._sunset = data.get("sunset")
+            self.sunrise = self._sunrise.astimezone(pytz.timezone(self.timezone)).time()
+            self.sunset = self._sunset.astimezone(pytz.timezone(self.timezone)).time()
             self.save()
 
         except Exception as e:
@@ -84,7 +101,9 @@ class Spot(models.Model):
         We should get some weighted averages calc going on the data points for a more accurate average count.
         """
         time_interval = settings.AGGREGATION_DATAPOINT_TIME_INTERVAL
-        time = datetime.datetime.now(pytz.utc) - datetime.timedelta(minutes=int(time_interval))
+        time = datetime.datetime.now(pytz.utc) - datetime.timedelta(
+            minutes=int(time_interval)
+        )
         points = DetectionDataPoint.objects.values_list("count", flat=True).filter(
             spot=self, timestamp__gt=time
         )
@@ -97,7 +116,9 @@ class Spot(models.Model):
         We should get some weighted averages calc going on the data points for a more accurate average count.
         """
         time_interval = settings.AVERAGE_DATAPOINT_TIME_INTERVAL
-        time = datetime.datetime.now(pytz.utc) - datetime.timedelta(minutes=int(time_interval))
+        time = datetime.datetime.now(pytz.utc) - datetime.timedelta(
+            minutes=int(time_interval)
+        )
         points = AggregateDataPoint.objects.values_list("count", flat=True).filter(
             spot=self, timestamp__gt=time
         )
@@ -106,15 +127,22 @@ class Spot(models.Model):
 
     def update_hourly_averages(self):
         """
-        Recalculate the HourlyAverageDataPoints. 
+        Recalculate the HourlyAverageDataPoints.
         NOTE this is a thirsty method given that it will be aggregating all the AverageDataPoint in the db
         """
-        
-        averages = AverageDataPoint.objects.values('hour_id').annotate(count_avg=Avg("count")).filter(spot=self)
-        for av in averages:
-            HourlyAverageDataPoint.objects.update_or_create(spot=self, hour_id=av.get("hour_id"), defaults=dict(count=av.get("count_avg")))
-        return averages
 
+        averages = (
+            AverageDataPoint.objects.values("hour_id")
+            .annotate(count_avg=Avg("count"))
+            .filter(spot=self)
+        )
+        for av in averages:
+            HourlyAverageDataPoint.objects.update_or_create(
+                spot=self,
+                hour_id=av.get("hour_id"),
+                defaults=dict(count=av.get("count_avg")),
+            )
+        return averages
 
     def check_cam(self):
         """Ping the cam url, disable the spot if the cam is down"""
@@ -127,11 +155,11 @@ class Spot(models.Model):
 
 
 class HourlyAverageDataPoint(models.Model):
-    """ The historical average count of surfers in the watter for a spot and hour of the day."""
+    """The historical average count of surfers in the watter for a spot and hour of the day."""
+
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
     hour_id = EnumIntegerField(HourIdentifierEnum)
     count = models.IntegerField(default=0)
-
 
 
 class AverageDataPoint(models.Model):
@@ -145,6 +173,7 @@ class AverageDataPoint(models.Model):
     hour_id = EnumIntegerField(HourIdentifierEnum, null=True)
     day_id = EnumIntegerField(DayIdentifierEnum, null=True)
     month_id = EnumIntegerField(MonthIdentifierEnum, null=True)
+
 
 class AggregateDataPoint(models.Model):
     """Aggregated data point. This will average all the DetectionDataPoints from the last AGGREGATION_DATAPOINT_TIME_INTERVAL"""
@@ -166,7 +195,9 @@ class DetectionDataPoint(models.Model):
 def create_average_datapoint_hour_id(sender, instance, created, **kwargs):
     """When a new AverageDataPoint is created, add its hour_id"""
     if created:
-        local_time = instance.timestamp.astimezone(pytz.timezone(instance.spot.timezone))
+        local_time = instance.timestamp.astimezone(
+            pytz.timezone(instance.spot.timezone)
+        )
         instance.hour_id = HourIdentifierEnum(local_time.hour)
         instance.day_id = DayIdentifierEnum(local_time.weekday())
         instance.month_id = MonthIdentifierEnum(local_time.month)
