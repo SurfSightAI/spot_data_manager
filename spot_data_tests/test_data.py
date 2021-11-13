@@ -3,6 +3,7 @@ import django
 django.setup()
 
 import pytest
+
 from counter.enums import HourIdentifierEnum, MonthIdentifierEnum
 from counter.models import (
     AggregateDataPoint,

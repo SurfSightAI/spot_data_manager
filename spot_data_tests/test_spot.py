@@ -4,6 +4,7 @@ django.setup()
 
 import pytest
 import requests
+
 from counter.models import Spot
 
 from .factories import create_spot, spot_params
