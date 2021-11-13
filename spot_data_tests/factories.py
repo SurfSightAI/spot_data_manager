@@ -1,6 +1,7 @@
 import random
 
 import pytest
+
 from counter.models import DetectionDataPoint, Spot
 
 spot_params = {
