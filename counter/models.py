@@ -90,6 +90,8 @@ class SpotManager(models.Manager):
 
 
 class Spot(models.Model):
+    class Meta:
+        app_label="counter"
     name = models.CharField(blank=False, null=True, max_length=100)
     major_city = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
@@ -212,6 +214,8 @@ class Spot(models.Model):
 
 
 class HourlyAverageDataPoint(models.Model):
+    class Meta:
+        app_label="counter"
     """The historical average count of surfers in the watter for a spot and hour of the day."""
 
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
@@ -220,6 +224,8 @@ class HourlyAverageDataPoint(models.Model):
 
 
 class AverageDataPoint(models.Model):
+    class Meta:
+        app_label="counter"
     """Averaged data point. This will average all the Aggregate from the last AVERAGE_DATAPOINT_TIME_INTERVAL"""
 
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
@@ -233,6 +239,8 @@ class AverageDataPoint(models.Model):
 
 
 class AggregateDataPoint(models.Model):
+    class Meta:
+        app_label="counter"
     """Aggregated data point. This will average all the DetectionDataPoints from the last AGGREGATION_DATAPOINT_TIME_INTERVAL"""
 
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
@@ -241,6 +249,8 @@ class AggregateDataPoint(models.Model):
 
 
 class DetectionDataPoint(models.Model):
+    class Meta:
+        app_label="counter"
     """Base level data point. Will be created ever ~30 seconds per spot"""
 
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE, null=False)
