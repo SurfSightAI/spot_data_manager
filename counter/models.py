@@ -90,8 +90,10 @@ class SpotManager(models.Manager):
 
 
 class Spot(models.Model):
+    """A surfline surf spot with cam"""
     class Meta:
         app_label="counter"
+        
     name = models.CharField(blank=False, null=True, max_length=100)
     major_city = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
@@ -214,9 +216,9 @@ class Spot(models.Model):
 
 
 class HourlyAverageDataPoint(models.Model):
+    """The historical average count of surfers in the watter for a spot and hour of the day."""
     class Meta:
         app_label="counter"
-    """The historical average count of surfers in the watter for a spot and hour of the day."""
 
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
     hour_id = EnumIntegerField(HourIdentifierEnum)
@@ -224,9 +226,9 @@ class HourlyAverageDataPoint(models.Model):
 
 
 class AverageDataPoint(models.Model):
+    """Averaged data point. This will average all the Aggregate from the last AVERAGE_DATAPOINT_TIME_INTERVAL"""
     class Meta:
         app_label="counter"
-    """Averaged data point. This will average all the Aggregate from the last AVERAGE_DATAPOINT_TIME_INTERVAL"""
 
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
     count = models.IntegerField(default=0)
@@ -239,9 +241,9 @@ class AverageDataPoint(models.Model):
 
 
 class AggregateDataPoint(models.Model):
+    """Aggregated data point. This will average all the DetectionDataPoints from the last AGGREGATION_DATAPOINT_TIME_INTERVAL"""
     class Meta:
         app_label="counter"
-    """Aggregated data point. This will average all the DetectionDataPoints from the last AGGREGATION_DATAPOINT_TIME_INTERVAL"""
 
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
     count = models.IntegerField(default=0)
@@ -249,9 +251,9 @@ class AggregateDataPoint(models.Model):
 
 
 class DetectionDataPoint(models.Model):
+    """Base level data point. Will be created ever ~30 seconds per spot"""
     class Meta:
         app_label="counter"
-    """Base level data point. Will be created ever ~30 seconds per spot"""
 
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE, null=False)
     timestamp = models.DateTimeField(auto_now_add=True)
