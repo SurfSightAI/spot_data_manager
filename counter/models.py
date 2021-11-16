@@ -14,6 +14,8 @@ from django.dispatch import receiver
 from enumfields import EnumIntegerField
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
+from multiprocessing.dummy import Pool as ThreadPool
+from multiprocessing import cpu_count
 
 from .enums import DayIdentifierEnum, HourIdentifierEnum, MonthIdentifierEnum
 
@@ -63,7 +65,7 @@ class SpotManager(models.Manager):
         Args:
             cam_check (bool, optional):
                 Defaults to True.
-                Checking all cams can take a while, this should only be called from the DAGS.
+                Checking cams in succession can take a while, thread the tasks to speed things upk.
 
         Returns:
             Queryset[Spot]: All active spots
@@ -71,8 +73,10 @@ class SpotManager(models.Manager):
 
         queryset = super().get_queryset()
         if cam_check:
-            for spot in queryset:
-                spot.check_cam()
+            pool = ThreadPool(cpu_count())
+            pool.map(check_cam, queryset)
+            pool.close()
+            pool.join()
 
         return queryset.annotate(
             local_sunrise=ConvertToTimezone("timezone", datetime_field="_sunrise"),
@@ -122,7 +126,9 @@ class Spot(models.Model):
         )
 
     def local_sunset_time(self):
-        return self.sunset.astimezone(pytz.timezone(self.timezone)).strftime("%H:%M:%S")
+        return self.sunset.astimezone(pytz.timezone(self.timezone)).strftime(
+            "%H:%M:%S"
+        )
 
     def is_active(self):
         return self.sunrise < datetime.datetime.now(pytz.utc) < self.sunset
@@ -276,3 +282,9 @@ def create_spot_data(sender, instance, created, **kwargs):
         tz = tz_find.timezone_at(lng=instance.lng, lat=instance.lat)
         instance.timezone = tz
         instance.save()
+
+
+def check_cam(spot):
+    r = requests.get(spot.url)
+    spot.enabled = r.ok
+    spot.save()
