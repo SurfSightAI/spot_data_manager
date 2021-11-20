@@ -125,14 +125,10 @@ class Spot(models.Model):
         return datetime.datetime.now(pytz.timezone(self.timezone))
 
     def local_sunrise_time(self):
-        return self.sunrise.astimezone(pytz.timezone(self.timezone)).strftime(
-            "%H:%M:%S"
-        )
+        return self.sunrise
 
     def local_sunset_time(self):
-        return self.sunset.astimezone(pytz.timezone(self.timezone)).strftime(
-            "%H:%M:%S"
-        )
+        return self.sunset
 
     def is_active(self):
         return self.sunrise < datetime.datetime.now(pytz.utc).time() < self.sunset
