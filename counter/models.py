@@ -135,7 +135,7 @@ class Spot(models.Model):
         )
 
     def is_active(self):
-        return self.sunrise < datetime.datetime.now(pytz.utc) < self.sunset
+        return self.sunrise < datetime.datetime.now(pytz.utc).time() < self.sunset
 
     def update_times(self):
         try:
