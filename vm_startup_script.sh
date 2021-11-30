@@ -6,7 +6,7 @@
 threshold=0.1
 
 count=0
-wait_minutes=5
+wait_minutes=30
 while true
 do
 
