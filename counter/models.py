@@ -11,13 +11,13 @@ from django.db.models import Avg, F, Func, Q
 from django.db.models.fields import DateTimeField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from enumfields import EnumIntegerField
+from enumfields import EnumIntegerField, EnumField
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 
-from .enums import DayIdentifierEnum, HourIdentifierEnum, MonthIdentifierEnum
+from .enums import DayIdentifierEnum, HourIdentifierEnum, MonthIdentifierEnum, SurfQualityRating
 
 LOGGER = logging.getLogger(__name__)
 
@@ -101,6 +101,8 @@ class Spot(models.Model):
     lat = models.FloatField(blank=True, null=True)
     lng = models.FloatField(blank=True, null=True)
     timezone = models.CharField(blank=True, null=True, max_length=200)
+    
+    current_surf_quality = EnumField(SurfQualityRating, blank=True, max_length=12)
 
     # Cam Url
     url = models.CharField(blank=True, null=True, max_length=200)
