@@ -6,16 +6,17 @@ TIMEZONE_ZONE = "UTC"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "surfsight",
-        "USER": "julianbaumgartner",
-        "PASSWORD": "",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "NAME": os.environ["DATABASE_NAME"],
+        "USER": os.environ["DATABASE_USER"],
+        "PASSWORD": os.environ["DATABASE_PASSWORD"],
+        "HOST": os.environ["DATABASE_HOST"],
+        "PORT": os.environ["DATABASE_PORT"],
     }
 }
+
 INSTALLED_APPS = ("counter",)
 
-SECRET_KEY = 'asdjf;lasdjflasdjflasdfjasldfj'
+SECRET_KEY = os.environ["SECRET_KEY"]
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 

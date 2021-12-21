@@ -102,7 +102,7 @@ class Spot(models.Model):
     lng = models.FloatField(blank=True, null=True)
     timezone = models.CharField(blank=True, null=True, max_length=200)
     
-    current_surf_quality = EnumField(SurfQualityRating, blank=True, max_length=12)
+    current_surf_quality = EnumField(SurfQualityRating, null=True, max_length=12)
 
     # Cam Url
     url = models.CharField(blank=True, null=True, max_length=200)
