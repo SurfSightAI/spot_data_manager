@@ -1,6 +1,13 @@
 from enum import Enum
 
 
+class SurfQualityRating(Enum):
+    POOR = "Poor"
+    POOR_TO_FAIR = "Poor to Fair"
+    FAIR = "Fair"
+    FAIR_TO_GOOD = "Fair to Good"
+    GOOD = "Good"
+
 class DayIdentifierEnum(Enum):
     MONDAY = 0
     TUESDAY = 1
