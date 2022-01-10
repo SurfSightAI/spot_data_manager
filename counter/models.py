@@ -11,13 +11,13 @@ from django.db.models import Avg, F, Func, Q
 from django.db.models.fields import DateTimeField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from enumfields import EnumIntegerField
+from enumfields import EnumIntegerField, EnumField
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 
-from .enums import DayIdentifierEnum, HourIdentifierEnum, MonthIdentifierEnum
+from .enums import DayIdentifierEnum, HourIdentifierEnum, MonthIdentifierEnum, SurfQualityRating
 
 LOGGER = logging.getLogger(__name__)
 
@@ -211,6 +211,17 @@ class Spot(models.Model):
         self.save()
 
 
+class SurfQualityDataPoint(models.Model):
+    """"Surf quality rating inferred from live stream."""
+    class Meta:
+        app_label="counter"
+    spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
+    rating = EnumField(SurfQualityRating, null=True, max_length=12)
+    hour_id = EnumIntegerField(HourIdentifierEnum, null=True)
+    day_id = EnumIntegerField(DayIdentifierEnum, null=True)
+    month_id = EnumIntegerField(MonthIdentifierEnum, null=True)
+
+
 class HourlyAverageDataPoint(models.Model):
     """The historical average count of surfers in the watter for a spot and hour of the day."""
     class Meta:
@@ -257,7 +268,7 @@ class DetectionDataPoint(models.Model):
 
 
 @receiver(post_save, sender=AverageDataPoint, dispatch_uid="create_average_datapoint")
-def create_average_datapoint_hour_id(sender, instance, created, **kwargs):
+def create_average_datapoint_time_info(sender, instance, created, **kwargs):
     """When a new AverageDataPoint is created, add its hour_id, day_id, and month_id based on the timestamp"""
     if created:
         local_time = instance.timestamp.astimezone(
@@ -267,6 +278,20 @@ def create_average_datapoint_hour_id(sender, instance, created, **kwargs):
         instance.day_id = DayIdentifierEnum(local_time.weekday())
         instance.month_id = MonthIdentifierEnum(local_time.month)
         instance.save()
+
+
+@receiver(post_save, sender=SurfQualityDataPoint, dispatch_uid="create_surf_quality_data_point")
+def create_surf_quality_data_point_time_info(sender, instance, created, **kwargs):
+    """When a new SurfQualityDataPoint is created, add its hour_id, day_id, and month_id based on the timestamp"""
+    if created:
+        local_time = instance.timestamp.astimezone(
+            pytz.timezone(instance.spot.timezone)
+        )
+        instance.hour_id = HourIdentifierEnum(local_time.hour)
+        instance.day_id = DayIdentifierEnum(local_time.weekday())
+        instance.month_id = MonthIdentifierEnum(local_time.month)
+        instance.save()
+
 
 
 @receiver(post_save, sender=Spot, dispatch_uid="create_spot_data")
