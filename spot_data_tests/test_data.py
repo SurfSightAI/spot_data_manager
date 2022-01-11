@@ -4,8 +4,9 @@ django.setup()
 
 import pytest
 
-from counter.enums import HourIdentifierEnum, MonthIdentifierEnum
+from counter.enums import HourIdentifierEnum, MonthIdentifierEnum, SurfQualityRating
 from counter.models import (
+    SurfQualityDataPoint,
     AggregateDataPoint,
     AverageDataPoint,
     DetectionDataPoint,
@@ -25,8 +26,12 @@ def test_data():
     assert len(DetectionDataPoint.objects.filter(spot=spot)) > 10
 
     assert AggregateDataPoint.objects.exists()
-
     assert isinstance(AverageDataPoint.objects.first().hour_id, HourIdentifierEnum)
     assert isinstance(AverageDataPoint.objects.first().month_id, MonthIdentifierEnum)
 
     assert HourlyAverageDataPoint.objects.first()
+
+
+    assert SurfQualityDataPoint.objects.first()
+    assert isinstance(SurfQualityDataPoint.objects.first().rating, SurfQualityRating)
+    assert isinstance(SurfQualityDataPoint.objects.first().hour_id, HourIdentifierEnum)
