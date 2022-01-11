@@ -2,7 +2,9 @@ import random
 
 import pytest
 
-from counter.models import DetectionDataPoint, Spot
+from counter.models import Spot, DetectionDataPoint, SurfQualityDataPoint
+from counter.enums import SurfQualityRating
+
 
 spot_params = {
     "name": "Lowers",
@@ -30,6 +32,9 @@ def create_data():
     for i in range(30):
         DetectionDataPoint.objects.create(spot=spot, count=random.randint(3, 40))
 
+    for i in range(3):
+        SurfQualityDataPoint.objects.create(spot=spot, rating=SurfQualityRating.FAIR_TO_GOOD)
+    
     # Let the rest of the data get created via and model methods
     spot.aggregate_datapoints()
     spot.average_aggregated_datapoints()
